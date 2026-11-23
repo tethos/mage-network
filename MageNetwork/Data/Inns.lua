@@ -45,18 +45,19 @@ local ZONES = {
 ns.Zones = ZONES
 
 -- capital = true: the whole city counts as rested.
+-- areas: extra subzone names inside the town (e.g. the inn itself) that /who may report.
 local INNS = {
     -- Alliance
     { faction = A, zone = "stormwind",  x = 52.6, y = 65.7, en = "Stormwind City", de = "Sturmwind", capital = true },
     { faction = A, zone = "ironforge",  x = 18.1, y = 51.4, en = "Ironforge", de = "Eisenschmiede", capital = true },
     { faction = A, zone = "darnassus",  x = 67.4, y = 15.7, en = "Darnassus", de = "Darnassus", capital = true },
-    { faction = A, zone = "elwynn",     x = 43.8, y = 65.8, en = "Goldshire", de = "Goldhain" },
-    { faction = A, zone = "dunmorogh",  x = 47.4, y = 52.5, en = "Kharanos", de = "Kharanos" },
+    { faction = A, zone = "elwynn",     x = 43.8, y = 65.8, en = "Goldshire", de = "Goldhain", areas = { "Lion's Pride Inn" } },
+    { faction = A, zone = "dunmorogh",  x = 47.4, y = 52.5, en = "Kharanos", de = "Kharanos", areas = { "Thunderbrew Distillery" } },
     { faction = A, zone = "lochmodan",  x = 35.5, y = 48.4, en = "Thelsamar", de = "Thelsamar" },
     { faction = A, zone = "redridge",   x = 27.0, y = 44.8, en = "Lakeshire", de = "Seenhain" },
-    { faction = A, zone = "duskwood",   x = 73.8, y = 44.5, en = "Darkshire", de = "Dunkelhain" },
+    { faction = A, zone = "duskwood",   x = 73.8, y = 44.5, en = "Darkshire", de = "Dunkelhain", areas = { "Scarlet Raven Tavern" } },
     { faction = A, zone = "westfall",   x = 52.9, y = 53.7, en = "Sentinel Hill", de = "Späherkuppe" },
-    { faction = A, zone = "wetlands",   x = 10.7, y = 60.9, en = "Menethil Harbor", de = "Hafen von Menethil" },
+    { faction = A, zone = "wetlands",   x = 10.7, y = 60.9, en = "Menethil Harbor", de = "Hafen von Menethil", areas = { "Deepwater Tavern" } },
     { faction = A, zone = "hillsbrad",  x = 51.1, y = 58.9, en = "Southshore", de = "Süderstade" },
     { faction = A, zone = "hinterlands",x = 14.1, y = 41.6, en = "Aerie Peak", de = "Nistgipfel" },
     { faction = A, zone = "darkshore",  x = 37.0, y = 44.1, en = "Auberdine", de = "Auberdine" },
@@ -91,7 +92,7 @@ local INNS = {
     { faction = H, zone = "dustwallow", x = 35.5, y = 30.4, en = "Brackenwall Village", de = "Brackenwall" },
 
     -- Neutral (goblin towns, usable by both factions)
-    { faction = N, zone = "stranglethorn", x = 27.0, y = 77.5, en = "Booty Bay", de = "Beutebucht" },
+    { faction = N, zone = "stranglethorn", x = 27.0, y = 77.5, en = "Booty Bay", de = "Beutebucht", areas = { "The Salty Sailor Tavern" } },
     { faction = N, zone = "tanaris",    x = 52.5, y = 27.9, en = "Gadgetzan", de = "Gadgetzan" },
     { faction = N, zone = "barrens",    x = 62.0, y = 39.4, en = "Ratchet", de = "Ratschet" },
     { faction = N, zone = "winterspring", x = 61.3, y = 38.9, en = "Everlook", de = "Ewige Warte" },
@@ -116,6 +117,37 @@ end
 
 function Inns.TownName(inn)
     return inn[LANG] or inn.en
+end
+
+-- How well a /who area matches the chosen inn:
+--   1 = in the town itself, 2 = name overlaps the town, 3 = elsewhere in the zone.
+local function addFolded(set, name)
+    if name and name ~= "" then set[#set + 1] = ns.Fold(name) end
+end
+
+local function townNames(inn)
+    if inn._folded then return inn._folded end
+    local set = {}
+    addFolded(set, inn.en)
+    addFolded(set, inn.de)
+    addFolded(set, inn[LANG])
+    for _, a in ipairs(inn.areas or {}) do addFolded(set, a) end
+    inn._folded = set
+    return set
+end
+
+function Inns.MatchRank(inn, area)
+    if not inn or not area or area == "" then return 3 end
+    if inn.capital then return 1 end
+    local a = ns.Fold(area)
+    local names = townNames(inn)
+    for _, n in ipairs(names) do
+        if a == n then return 1 end
+    end
+    for _, n in ipairs(names) do
+        if #n >= 4 and (a:find(n, 1, true) or n:find(a, 1, true)) then return 2 end
+    end
+    return 3
 end
 
 function Inns.MapID(inn)
