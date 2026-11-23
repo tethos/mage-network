@@ -1,0 +1,17 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="MageNetworkInnPinTemplate" mixin="MageNetworkInnPinMixin" virtual="true" enableMouse="true">
+        <Size x="18" y="18"/>
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture parentKey="Icon" file="Interface\Icons\INV_Misc_Rune_01" setAllPoints="true">
+                    <TexCoords left="0.08" right="0.92" top="0.08" bottom="0.92"/>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                if MageNetworkInnPinMixin then Mixin(self, MageNetworkInnPinMixin) end
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>
