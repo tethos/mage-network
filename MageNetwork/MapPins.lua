@@ -86,12 +86,10 @@ local function positionOn(inn, mapID, mapInfo)
     if not innMap then return end
     if innMap == mapID then return inn.x / 100, inn.y / 100, false end
 
-    -- Smaller pins on the continent map, and capitals on their parent zone.
-    local continent = Enum and Enum.UIMapType and Enum.UIMapType.Continent or 2
-    local innInfo = C_Map.GetMapInfo(innMap)
-    local wanted = (mapInfo.mapType == continent)
-        or (inn.capital and innInfo and innInfo.parentMapID == mapID)
-    if not wanted then return end
+    -- Any other outdoor map (continent, world, a parent zone, or the map a zoomable
+    -- map addon switches to): place a smaller pin wherever the inn falls inside it.
+    local dungeon = Enum and Enum.UIMapType and Enum.UIMapType.Dungeon or 4
+    if mapInfo.mapType == dungeon then return end
 
     local k = tostring(inn) .. ":" .. mapID
     if cache[k] == nil then
