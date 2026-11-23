@@ -111,7 +111,7 @@ local function playReplySound()
 end
 
 ns:On("CHAT_MSG_WHISPER", function(_, _, sender)
-    if not sender or ns.IsSecret(sender) then return end
+    if not sender or ns.IsSecret(sender) or ns.IsBlocked() then return end
     local state = Whisper:State(sender)
     if state == "sent" or state == "queued" then
         setState(sender, "replied")

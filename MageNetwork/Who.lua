@@ -55,6 +55,7 @@ end
 ns:On("WHO_LIST_UPDATE", function()
     if not Who.pending then return end
     Who.pending = false
+    if ns.IsBlocked() then return end
     if C_FriendList.SetWhoToUi then C_FriendList.SetWhoToUi(false) end
 
     local results = {}

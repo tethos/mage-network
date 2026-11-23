@@ -184,8 +184,9 @@ function UI:Refresh()
     rc.text:SetTextColor(unpack(S.rested and T.text or T.muted))
 
     self.askBtn:SetLabel(L.ASK:format(ns.db.batchSize))
-    self.askBtn:SetEnabled(#ns.Who.results > 0)
-    self.searchBtn:SetEnabled(not ns.Who.pending)
+    local blocked = ns.IsBlocked()
+    self.askBtn:SetEnabled(not blocked and #ns.Who.results > 0)
+    self.searchBtn:SetEnabled(not blocked and not ns.Who.pending)
     self.list:Refresh()
 end
 

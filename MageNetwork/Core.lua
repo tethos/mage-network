@@ -47,15 +47,25 @@ function ns:On(event, fn)
     list[#list + 1] = fn
 end
 
+-- Each handler is isolated: one failing module never stops the others.
+-- Errors are reported once per handler so a bug can't flood the screen.
+local reported = {}
 function ns:Fire(event, ...)
     local list = handlers[event]
     if not list then return end
     for i = 1, #list do
-        list[i](event, ...)
+        local ok, err = pcall(list[i], event, ...)
+        if not ok and not reported[list[i]] then
+            reported[list[i]] = true
+            local handler = geterrorhandler and geterrorhandler()
+            if handler then handler("Mage Network (" .. event .. "): " .. tostring(err)) end
+        end
     end
 end
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
+    -- Nothing runs before saved variables are ready.
+    if not ns.db and event ~= "ADDON_LOADED" then return end
     ns:Fire(event, ...)
 end)
 
