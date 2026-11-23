@@ -6,6 +6,8 @@ local ResultList = {}
 ns.ResultList = ResultList
 
 local ROWS, ROW_H = 8, 24
+local BAR_W, BAR_GAP = 4, 6
+local WHITE = T.WHITE
 
 local STATE_COLOR = {
     queued = T.muted,
@@ -78,23 +80,99 @@ local function createRow(list, i, width)
     return r
 end
 
+-- Slim scrollbar in the theme: faint track, mage-blue thumb. Drag the thumb, click
+-- the track to page, or use the mouse wheel on the list.
+local function createScrollBar(list)
+    local bar = CreateFrame("Frame", nil, list)
+    bar:SetPoint("TOPRIGHT", 0, -1)
+    bar:SetPoint("BOTTOMRIGHT", 0, 3)
+    bar:SetWidth(BAR_W + 4)
+    bar:EnableMouse(true)
+
+    local track = bar:CreateTexture(nil, "BACKGROUND")
+    track:SetTexture(WHITE)
+    track:SetVertexColor(unpack(T.subtle))
+    track:SetPoint("TOP")
+    track:SetPoint("BOTTOM")
+    track:SetWidth(BAR_W)
+
+    local thumb = CreateFrame("Frame", nil, bar)
+    thumb:SetWidth(BAR_W)
+    thumb:EnableMouse(true)
+    local tex = thumb:CreateTexture(nil, "ARTWORK")
+    tex:SetTexture(WHITE)
+    tex:SetAllPoints()
+    local function tint(on)
+        tex:SetVertexColor(T.accent[1], T.accent[2], T.accent[3], on and 1 or 0.55)
+    end
+    tint(false)
+    thumb:SetScript("OnEnter", function() tint(true) end)
+    thumb:SetScript("OnLeave", function() if not thumb.dragging then tint(false) end end)
+
+    local function maxOffset() return math.max(0, #ns.Who.results - ROWS) end
+    local function travel() return math.max(1, bar:GetHeight() - thumb:GetHeight()) end
+    local function cursorY() return select(2, GetCursorPosition()) / bar:GetEffectiveScale() end
+
+    function bar:Update()
+        local total, max = #ns.Who.results, maxOffset()
+        self:SetShown(max > 0)
+        if max == 0 then return end
+        local h = math.max(18, self:GetHeight() * ROWS / total)
+        thumb:SetHeight(h)
+        thumb:ClearAllPoints()
+        thumb:SetPoint("TOP", self, "TOP", 0, -travel() * list.offset / max)
+    end
+
+    thumb:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        self.dragging, self.startY, self.startOffset = true, cursorY(), list.offset
+        self:SetScript("OnUpdate", function()
+            local moved = (self.startY - cursorY()) / travel()
+            list:SetOffset(math.floor(self.startOffset + moved * maxOffset() + 0.5))
+        end)
+    end)
+    thumb:SetScript("OnMouseUp", function(self)
+        self.dragging = false
+        self:SetScript("OnUpdate", nil)
+        if not self:IsMouseOver() then tint(false) end
+    end)
+
+    bar:SetScript("OnMouseDown", function(self)
+        local top = thumb:GetTop()
+        if not top then return end
+        local dir = cursorY() > top and -1 or 1
+        list:SetOffset(list.offset + dir * ROWS)
+    end)
+    return bar
+end
+
 function ResultList:Create(parent, width)
     local list = CreateFrame("Frame", nil, parent)
     list:SetSize(width, ROWS * ROW_H)
     list.offset = 0
     list.rows = {}
-    for i = 1, ROWS do list.rows[i] = createRow(list, i, width) end
+    local rowWidth = width - BAR_W - BAR_GAP
+    for i = 1, ROWS do list.rows[i] = createRow(list, i, rowWidth) end
+    list.bar = createScrollBar(list)
+
+    function list:SetOffset(offset)
+        local max = math.max(0, #ns.Who.results - ROWS)
+        offset = math.max(0, math.min(max, offset))
+        if offset ~= self.offset then
+            self.offset = offset
+            self:Refresh()
+        end
+    end
 
     list:EnableMouseWheel(true)
     list:SetScript("OnMouseWheel", function(self, delta)
-        local max = math.max(0, #ns.Who.results - ROWS)
-        self.offset = math.max(0, math.min(max, self.offset - delta))
-        self:Refresh()
+        self:SetOffset(self.offset - delta)
     end)
 
     function list:Refresh()
         local results = ns.Who.results
         if self.offset > math.max(0, #results - ROWS) then self.offset = 0 end
+        self.bar:Update()
         for i, r in ipairs(self.rows) do
             local d = results[i + self.offset]
             r.data = d
@@ -105,6 +183,8 @@ function ResultList:Create(parent, width)
                 r.name:SetText(ns.ShortName(d.name) or d.name)
                 r.level:SetText(d.level or "")
                 r.info:SetText(state and L["STATE_" .. state:upper()] or (d.area or ""))
+                -- Mages inside the chosen town stand out; the rest of the zone stays muted.
+                r.info:SetTextColor(unpack((state or d.rank == 1) and T.text or T.muted))
                 r:SetBackdropColor(unpack(r.replied and { T.good[1], T.good[2], T.good[3], 0.10 }
                     or (r:IsMouseOver() and T.hover) or { 0, 0, 0, 0 }))
                 r:Show()
