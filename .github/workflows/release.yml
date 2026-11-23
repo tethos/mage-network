@@ -1,0 +1,40 @@
+# Push a tag like v0.2.0 and this builds the zip and publishes a GitHub release.
+# WowUp can install addons straight from GitHub releases.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check TOC version matches tag
+        run: |
+          TOC_VERSION=$(grep -oP '^## Version:\s*\K.+' MageNetwork/MageNetwork.toc | tr -d '\r')
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$TOC_VERSION" != "$TAG" ]; then
+            echo "TOC version ($TOC_VERSION) does not match tag ($TAG)"; exit 1
+          fi
+
+      - name: Build zip
+        run: python tools/package.py
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.zip
+            dist/release.json
+          generate_release_notes: true
