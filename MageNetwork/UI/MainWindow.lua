@@ -5,7 +5,7 @@ local L, T = ns.L, ns.Theme
 local UI = {}
 ns.UI = UI
 
-local WIDTH, HEIGHT = 300, 420
+local WIDTH, HEIGHT = 300, 440
 local PAD = 16
 
 local function savePosition(f)
@@ -21,7 +21,7 @@ end
 
 local function chip(parent)
     local c = CreateFrame("Frame", nil, parent)
-    c:SetSize(130, 16)
+    c:SetSize(WIDTH - PAD * 2, 16)
     c.dot = T.Dot(c, 7)
     c.dot:SetPoint("LEFT")
     c.text = T.Text(c, T.fontSmall, T.muted)
@@ -84,11 +84,11 @@ function UI:Build()
     self.scrollChip = chip(f)
     self.scrollChip:SetPoint("TOPLEFT", PAD, -42)
     self.restChip = chip(f)
-    self.restChip:SetPoint("TOPLEFT", self.scrollChip, "TOPRIGHT", 8, 0)
+    self.restChip:SetPoint("TOPLEFT", self.scrollChip, "BOTTOMLEFT", 0, -4)
 
     -- Main page (search + results); options replace it.
     local page = CreateFrame("Frame", nil, f)
-    page:SetPoint("TOPLEFT", 0, -64)
+    page:SetPoint("TOPLEFT", 0, -84)
     page:SetPoint("BOTTOMRIGHT", 0, 0)
     self.page = page
 
@@ -117,7 +117,7 @@ function UI:Build()
     self.portButton:SetPoint("BOTTOMLEFT", PAD, PAD - 2)
 
     self.options = ns.Options:Create(f, WIDTH - PAD * 2)
-    self.options:SetPoint("TOPLEFT", PAD, -64)
+    self.options:SetPoint("TOPLEFT", PAD, -84)
     self.options:Hide()
 
     f:SetScript("OnShow", function() ns.Status:Update(); UI:Refresh() end)
@@ -181,7 +181,7 @@ function UI:Refresh()
 
     local sc = self.scrollChip
     sc.dot:SetColor(S.scrolls > 0 and T.good or T.off)
-    sc.text:SetText(L.STATUS_SCROLL .. "  " .. S.scrolls)
+    sc.text:SetText(("%s: %s"):format(S:ScrollName(), S.scrolls > 0 and S.scrolls or L.STATUS_NONE))
     sc.text:SetTextColor(unpack(S.scrolls > 0 and T.text or T.muted))
 
     local rc = self.restChip
@@ -208,9 +208,11 @@ ns:On("MN_SEARCH_STARTED", function(_, inn)
     UI:SetHint(L.SEARCHING:format(ns.Inns.ZoneName(inn)))
     refresh()
 end)
-ns:On("MN_SEARCH_DONE", function(_, inn, count)
+ns:On("MN_SEARCH_DONE", function(_, inn, count, matches)
     local zone = ns.Inns.ZoneName(inn)
-    if count > 0 then
+    if count > 0 and matches and matches > 0 and matches < count and not inn.capital then
+        UI:SetHint(L.FOUND_MATCH:format(matches, ns.Inns.TownName(inn), count - matches, zone), T.text)
+    elseif count > 0 then
         UI:SetHint(L.FOUND:format(count, zone), T.text)
     else
         UI:SetHint(L.NONE_FOUND:format(zone))
