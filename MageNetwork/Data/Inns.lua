@@ -101,12 +101,13 @@ local INNS = {
 local Inns = {}
 ns.Inns = Inns
 
-local isGerman = (GetLocale() == "deDE")
+-- Two-letter key for the client language: "en", "de", "fr", ... (falls back to "en").
+local LANG = (GetLocale() or "enUS"):sub(1, 2):lower()
 
 -- Localized zone name (also the string sent to /who).
 local function zoneName(zone)
     if zone.resolvedName then return zone.resolvedName end
-    return isGerman and zone.de or zone.en
+    return zone[LANG] or zone.en
 end
 
 function Inns.ZoneName(inn)
@@ -114,7 +115,7 @@ function Inns.ZoneName(inn)
 end
 
 function Inns.TownName(inn)
-    return isGerman and inn.de or inn.en
+    return inn[LANG] or inn.en
 end
 
 function Inns.MapID(inn)
@@ -181,6 +182,7 @@ function Inns:GetAvailable()
                 ns.Fold(inn.en), ns.Fold(inn.de),
                 ns.Fold(ZONES[inn.zone].en), ns.Fold(ZONES[inn.zone].de),
                 ns.Fold(zoneName(ZONES[inn.zone])),
+                ns.Fold(Inns.TownName(inn)),
             }
             available[#available + 1] = inn
         end
