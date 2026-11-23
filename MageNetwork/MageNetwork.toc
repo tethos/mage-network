@@ -1,0 +1,27 @@
+## Interface: 16001
+## Title: |cff3fc7ebMage Network|r
+## Notes: Find resting mages and travel with the Scroll of Liminal Passage.
+## Notes-deDE: Finde ausruhende Magier und reise mit der Schriftrolle des liminalen Übergangs.
+## Author: tethos
+## Version: 0.1.0
+## SavedVariables: MageNetworkDB
+## IconTexture: Interface\Icons\INV_Misc_Rune_01
+## AddonCompartmentFunc: MageNetwork_OnCompartmentClick
+## AddonCompartmentFuncOnEnter: MageNetwork_OnCompartmentEnter
+## AddonCompartmentFuncOnLeave: MageNetwork_OnCompartmentLeave
+
+Core.lua
+Locales\enUS.lua
+Locales\deDE.lua
+Data\Inns.lua
+Status.lua
+Who.lua
+Whisper.lua
+Party.lua
+MapPins.lua
+MapPins.xml
+UI\Theme.lua
+UI\ZoneInput.lua
+UI\ResultList.lua
+UI\Options.lua
+UI\MainWindow.lua

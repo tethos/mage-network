@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name="MAGENETWORK_TOGGLE" header="MAGENETWORK" category="ADDONS">
+        MageNetwork_ToggleBinding()
+    </Binding>
+</Bindings>
