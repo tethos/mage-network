@@ -19,7 +19,8 @@ T.off    = { 0.40, 0.43, 0.48, 1 }
 local WHITE = "Interface\\Buttons\\WHITE8x8"
 local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 T.WHITE = WHITE
-T.ICON = "Interface\\Icons\\INV_Misc_Rune_01"
+T.INN_ICON = "Interface\\Icons\\INV_Misc_Rune_01" -- hearthstone: marks inns
+T.LOGO = ns.ICON                                  -- addon icon (Media/icon.tga)
 
 local BACKDROP = { bgFile = WHITE, edgeFile = WHITE, edgeSize = 1 }
 

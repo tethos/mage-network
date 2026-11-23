@@ -5,7 +5,7 @@
 ## Author: tethos
 ## Version: 0.1.0
 ## SavedVariables: MageNetworkDB
-## IconTexture: Interface\Icons\INV_Misc_Rune_01
+## IconTexture: Interface\AddOns\MageNetwork\Media\icon
 ## AddonCompartmentFunc: MageNetwork_OnCompartmentClick
 ## AddonCompartmentFuncOnEnter: MageNetwork_OnCompartmentEnter
 ## AddonCompartmentFuncOnLeave: MageNetwork_OnCompartmentLeave
@@ -25,3 +25,4 @@ UI\ZoneInput.lua
 UI\ResultList.lua
 UI\Options.lua
 UI\MainWindow.lua
+UI\Minimap.lua

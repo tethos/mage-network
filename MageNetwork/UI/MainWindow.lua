@@ -5,7 +5,7 @@ local L, T = ns.L, ns.Theme
 local UI = {}
 ns.UI = UI
 
-local WIDTH, HEIGHT = 300, 400
+local WIDTH, HEIGHT = 300, 420
 local PAD = 16
 
 local function savePosition(f)
@@ -60,10 +60,9 @@ function UI:Build()
     header:SetScript("OnDragStop", function() f:StopMovingOrSizing(); savePosition(f) end)
 
     local icon = header:CreateTexture(nil, "ARTWORK")
-    icon:SetTexture(T.ICON)
-    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    icon:SetSize(16, 16)
-    icon:SetPoint("LEFT", PAD - 2, 0)
+    icon:SetTexture(T.LOGO)
+    icon:SetSize(20, 20)
+    icon:SetPoint("LEFT", PAD - 4, 0)
 
     local title = T.Text(header, T.fontTitle, T.accent)
     title:SetPoint("LEFT", icon, "RIGHT", 8, 0)
@@ -123,6 +122,13 @@ function UI:Build()
 
     f:SetScript("OnShow", function() ns.Status:Update(); UI:Refresh() end)
     f:SetScript("OnHide", function() if self.zoneInput then self.zoneInput:CloseSuggestions() end end)
+end
+
+function UI:ShowOptions()
+    self:Show()
+    if self.frame and self.frame:IsShown() and not self.options:IsShown() then
+        self:ToggleOptions()
+    end
 end
 
 function UI:ToggleOptions()

@@ -5,6 +5,7 @@ ns.ADDON = ADDON
 ns.TITLE = "Mage Network"
 ns.VERSION = "0.1.0"
 ns.SCROLL_ITEM_ID = 213548
+ns.ICON = "Interface\\AddOns\\MageNetwork\\Media\\icon"
 ns.COLOR_HEX = "3fc7eb"
 ns.COLOR = { r = 0.247, g = 0.780, b = 0.922 }
 
@@ -27,6 +28,8 @@ local DEFAULTS = {
     explainTemplate = nil, -- nil = use localized default
     point = nil,
     contacted = {},
+    minimap = { angle = 200, hide = false },
+    welcomed = false,
 }
 
 ---------------------------------------------------------------------------
@@ -148,13 +151,11 @@ end)
 ---------------------------------------------------------------------------
 local function applyDefaults(db, defaults)
     for k, v in pairs(defaults) do
-        if db[k] == nil then
-            if type(v) == "table" then
-                db[k] = {}
-                applyDefaults(db[k], v)
-            else
-                db[k] = v
-            end
+        if type(v) == "table" then
+            if type(db[k]) ~= "table" then db[k] = {} end
+            applyDefaults(db[k], v)
+        elseif db[k] == nil then
+            db[k] = v
         end
     end
 end
@@ -169,6 +170,10 @@ end)
 
 ns:On("PLAYER_LOGIN", function()
     ns:Fire("MN_LOGIN")
+    if not ns.db.welcomed then
+        ns.db.welcomed = true
+        ns.Print(ns.L.WELCOME)
+    end
 end)
 
 ---------------------------------------------------------------------------
@@ -180,6 +185,14 @@ function ns:Toggle()
         return
     end
     if ns.UI and ns.UI.Toggle then ns.UI:Toggle() end
+end
+
+function ns:OpenOptions()
+    if ns.IsBlocked() then
+        ns.Print(ns.L.BLOCKED)
+        return
+    end
+    if ns.UI and ns.UI.ShowOptions then ns.UI:ShowOptions() end
 end
 
 SLASH_MAGENETWORK1 = "/mn"
@@ -196,6 +209,11 @@ SlashCmdList.MAGENETWORK = function(msg)
         else
             ns.Print("mapID " .. tostring(mapID))
         end
+    elseif msg == "options" or msg == "config" then
+        ns:OpenOptions()
+    elseif msg == "minimap" then
+        ns.db.minimap.hide = not ns.db.minimap.hide
+        ns:Fire("MN_MINIMAP_CHANGED")
     elseif msg == "partner" then
         if ns.Party then ns.Party:SetPartnerFromTarget() end
     elseif msg == "reset" then
@@ -204,7 +222,7 @@ SlashCmdList.MAGENETWORK = function(msg)
         if ns.UI and ns.UI.ResetPosition then ns.UI:ResetPosition() end
         ns.Print(ns.L.RESET_DONE)
     elseif msg == "help" then
-        ns.Print("/mn  |  /mn where  |  /mn partner  |  /mn reset")
+        ns.Print("/mn  |  /mn options  |  /mn minimap  |  /mn partner  |  /mn where  |  /mn reset")
     else
         ns:Toggle()
     end
